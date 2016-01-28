@@ -1,0 +1,31 @@
+{
+  "name": "git-remote-ssb",
+  "version": "0.0.0",
+  "description": "git remote helper for secure-scuttlebutt (ssb)",
+  "main": "bin.js",
+  "dependencies": {
+    "linerstream": "^0.1.4",
+    "parse-git-config": "^0.3.1",
+    "ssb-client": "^3.0.0",
+    "ssb-config": "^1.1.0",
+    "ssb-keys": "^4.0.10",
+    "ssb-ref": "^2.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clehner/git-remote-ssb"
+  },
+  "keywords": [
+    "secure-scuttlebutt",
+    "git-remote"
+  ],
+  "author": "Charles Lehner (http://celehner.com/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/clehner/git-remote-ssb/issues"
+  }
+}

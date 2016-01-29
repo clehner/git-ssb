@@ -2,15 +2,19 @@
   "name": "git-remote-ssb",
   "version": "0.0.0",
   "description": "git remote helper for secure-scuttlebutt (ssb)",
-  "main": "bin.js",
+  "bin": "bin.js",
+  "main": "index.js",
   "dependencies": {
     "git-fast-import-parser": "^0.0.0",
-    "linerstream": "^0.1.4",
+    "looper": "^3.0.0",
     "parse-git-config": "^0.3.1",
+    "pull-stream": "^3.1.0",
+    "pull-utf8-decoder": "^1.0.1",
     "ssb-client": "^3.0.0",
     "ssb-config": "^1.1.0",
     "ssb-keys": "^4.0.10",
-    "ssb-ref": "^2.2.2"
+    "ssb-ref": "^2.2.2",
+    "stream-to-pull-stream": "^1.6.6"
   },
   "devDependencies": {},
   "scripts": {

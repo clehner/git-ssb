@@ -4,6 +4,7 @@ var ref = require('ssb-ref')
 var ssbKeys = require('ssb-keys')
 var path = require('path')
 var LinerStream = require('linerstream')
+var GitFastImportParser = require('git-fast-import-parser')
 
 function createSsbClient(cb) {
   var keys = ssbKeys.loadOrCreateSync(path.join(ssbConfig.path, 'secret'))
@@ -58,7 +59,6 @@ function handleOption(name, value) {
 var liner = process.stdin.pipe(new LinerStream())
 liner.on('data', function (line) {
   console.error('>', line)
-  var m
   if (line == 'capabilities') {
     printList([
       // 'fetch',
@@ -71,14 +71,20 @@ liner.on('data', function (line) {
       'refspec refs/tags/*:refs/ssb/tags/*',
     ])
   } else if (line == 'list' || line == 'list for-push') {
+    // get refs
     printList([
       // value name [attr..]
       // sha name [attr..]
       // '@refs/heads/' + head + ' HEAD'
     ])
-  } else if ((m = line.match(/^option ([^ ]*) (.*)$/))) {
+  } else if (line == 'export') {
+    process.stdin.pipe(new GitFastImportParser())
+  } else if (line.indexOf('option') === 0) {
+    var m = line.match(/^option ([^ ]*) (.*)$/)
     var msg
-    try {
+    if (!m) {
+      msg = 'error missing option'
+    } else try {
       msg = handleOption(m[1], m[2]) === false ? 'unsupported' : 'ok'
     } catch(e) {
       msg = 'error ' + e.message

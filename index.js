@@ -1,6 +1,5 @@
 var toPull = require('stream-to-pull-stream')
 var GitFastImportParser = require('git-fast-import-parser')
-var utf8 = require('pull-utf8-decoder')
 
 var verbosity = 1
 
@@ -8,49 +7,16 @@ function handleOption(name, value) {
   switch (name) {
     case 'verbosity':
       verbosity = +value || 0
-      break
+      // console.error("ok verbo")
+      return true
+    case 'progress':
+      progress = !!value && value !== 'false'
+      return true
     default:
+      console.error('unknown option', name + ': ' + value)
       return false
   }
 }
-
-/*
-var liner = process.stdin.pipe(new LinerStream())
-liner.on('data', function (line) {
-  console.error('>', line)
-  if (line == 'capabilities') {
-    printList([
-      // 'fetch',
-      // 'push',
-      // 'list',
-      'option',
-      'import',
-      'export',
-      'refspec refs/heads/*:refs/ssb/heads/*',
-      'refspec refs/tags/*:refs/ssb/tags/*',
-    ])
-  } else if (line == 'list' || line == 'list for-push') {
-    // get refs
-    printList([
-      // value name [attr..]
-      // sha name [attr..]
-      // '@refs/heads/' + head + ' HEAD'
-    ])
-  } else if (line == 'export') {
-    process.stdin.pipe(new GitFastImportParser())
-  } else if (line.indexOf('option') === 0) {
-    var m = line.match(/^option ([^ ]*) (.*)$/)
-    var msg
-    if (!m) {
-      msg = 'error missing option'
-    } else try {
-      msg = handleOption(m[1], m[2]) === false ? 'unsupported' : 'ok'
-    } catch(e) {
-      msg = 'error ' + e.message
-    }
-    process.stdout.write(msg + '\n')
-  }
-})
 
 function capabilitiesCmd(read) {
   read(null, function next(end, data) {
@@ -62,20 +28,8 @@ function capabilitiesCmd(read) {
   })
 }
 
-*/
-
-/*
-var map = function (read, map) {
-  //return a readable function!
-  return function (end, cb) {
-    read(end, function (end, data) {
-      cb(end, data != null ? map(data) : null)
-    })
-  }
-}
-*/
-
 // return a source that delivers some data and then ends
+// TODO: use pull.once and abortCb for this
 function endSource(data) {
   var done
   return function (end, cb) {
@@ -85,13 +39,33 @@ function endSource(data) {
   }
 }
 
-function capabilities() {
+function capabilitiesSource() {
   return endSource([
     'option',
     'import',
     'export',
     'refspec refs/heads/*:refs/ssb/heads/*',
     'refspec refs/tags/*:refs/ssb/tags/*',
+  ].join('\n') + '\n\n')
+}
+
+function optionSource(line) {
+  var m = line.match(/^option ([^ ]*) (.*)$/)
+  var msg
+  if (!m) {
+    msg = 'error missing option'
+  } else {
+    msg = handleOption(m[1], m[2])
+    msg = (msg === true) ? 'ok'
+        : (msg === false) ? 'unsupported'
+        : 'error ' + msg
+  }
+  return endSource(msg + '\n')
+}
+
+function listSource() {
+  return endSource([
+    /* TODO */
   ].join('\n') + '\n\n')
 }
 
@@ -106,41 +80,29 @@ function gitFastImportSink(read) {
   })
 }
 
-// handle a command.
-// return a source for command response data
-function command(line, payloadSinkCb) {
+// return a duplex
+// source part handles command response data
+// sink part handles a payload (optional)
+function handleCommand(line, cb) {
+  if (verbosity > 1)
+    console.error('command:', line)
   if (line == 'capabilities')
-    return capabilities()
-  else if (line == 'export')
-    return function (end, cb) {
-      if (end) return cb(end)
-      payloadSinkCb(gitFastImportSink)
-      cb(true)
+    return {
+      source: capabilitiesSource()
     }
-  else
-    return function (end, cb) {
-      cb(new Error('Unknown command ' + line))
+  if (line == 'list')
+    return {
+      source: listSource()
     }
-}
-
-// commands through. reads command line strings. writes data.
-// calls payloadSinkCb with a sink for payload data following the commands
-function commands(read, payloadSinkCb) {
-  var commandSource
-  return function (end, cb) {
-    if (commandSource)
-      commandSource(end, cb)
-    else
-      read(end, function (end, line) {
-        if (end) return cb(end)
-        commandSource = command(line, function (err, payloadSink) {
-          if (err) return cb(err)
-          payloadSinkCb(payloadSink)
-          cb(true)
-        })
-        commandSource(null, cb)
-      })
-  }
+  if (line == 'export')
+    return {
+      sink: gitFastImportSink
+    }
+  if (line.indexOf('option') === 0)
+    return {
+      source: optionSource(line)
+    }
+  throw new Error('Unknown command ' + line)
 }
 
 // protocol: commands separated by newlines, followed by optional payload.
@@ -150,69 +112,105 @@ function commands(read, payloadSinkCb) {
 // e.g. git says list. we respond with list of refs
 
 module.exports = function (sbot) {
-  var inPayload = false, payloadSink
-  var utf8Decoder = utf8()
-  var commandLine = ''
-  return function (read) { // sink. reader to stdin
-    return function (abort, cb) { // source. read to stdout
-      if (inPayload)
-        return cb(true)
-        // return payloadSink(read)
+  var commandSource
+  var readNext
+  var sourceCb
 
-    var commandsReader = commands(utf8Decoder(read), function (plSink) {
-      payloadSink = plSink
-    })
-
-      utf8Decoder(read)(abort, function (end, data) {
-        commandsReader(end, )
-
-        var i = data.indexOf('\n')
-        if (i === 0) {
-          // commands done
-          beginPayload()
-          inPayload = true
-        if (i === -1) {
-          commandLine += data
-          cb() // wait for more data
+  function source(end, cb) {
+    // console.error('SRC')
+    if (commandSource) {
+      commandSource(end, function (end, data) {
+        // console.error('cmd source', end, JSON.stringify(data))
+        if (end === true) {
+          // console.error('READ next'),
+          sourceCb = cb
+          readNext()
+        } else if (end) {
+          throw err // TODO
         } else {
-          var _commandLine = commandLine + data.substr(0, i)
-          commandLine = ''
-          handleCommand(_commandLine, function (err, plSink) {
-            // response(null, data.substr(i + 1))
-            payloadSink = plSink
-            cb(data, err)
-          })
-          // there should only be a few commands, so it should be okay
-          // without looper here
-          return commandsRead(end, data.substr(i + 1))
-        }
-        /*
-        var j = data.indexOf('\n', i)
-          if (j > i) {
-            commandLine += data.substring(i, j)
-            gotCommandLine(commandLine)
-            commandLine = ''
-          } else if (j === i) {
-            commandsDone(function (err, plSink) {
-              payloadSink = plSink
-              if (err)
-                cb(err)
-            })
-            // inPayload = true
-          } else {
-            commandLine += data
-          }
-        }
-        */
-
-        // console.error('data', data)
-        if (end) {
-          cb(end)
-        } else {
-          if (0);
-          // cb(null, data)
+          // console.error('CB'),
+          cb(end, data)
         }
       })
+      // sourceCb = null
+    } else {
+      sourceCb = cb
     }
+  }
+
+  function sink(read) {
+    var payloadBuf
+    var inPayload = false
+    var commandLine = ''
+
+    function payloadRead(end, cb) {
+      if (end) return read(end)
+      if (payloadBuf) {
+        // read initial buffered chunk of payload
+        var buf = payloadBuf
+        payloadBuf = null
+        // payloadCb = cb
+        cb(null, buf)
+      } else {
+        // pass the rest of the stream to the payload sink
+        read(end, cb)
+      }
+    }
+
+    read(null, function next(end, buf) {
+      if (inPayload)
+        throw new Error('in payload')
+        // return payloadCb(end, buf)
+
+      if (end === true) return console.error('end')
+      if (end) throw end
+
+      if (verbosity > 2)
+        console.error('>', end || JSON.stringify(buf.toString('utf8')))
+
+      // TODO: make this UTF8-safe
+      var i = buf.indexOf('\n')
+      if (i === 0) {
+        // console.error('commands done being sent')
+        // got empty line: commands are done
+        inPayload = true
+        if (!payloadSink)
+          return read(true, function () {
+            console.error('no payload sink')
+          })
+        payloadBuf = buf.slice(1)
+        payloadSink(payloadRead)
+      } else if (i === -1) {
+        // console.error('in command')
+        // got part of a command
+        commandLine += buf.toString('utf8')
+        read(null, next)
+      } else {
+        // console.error('and more')
+        // got command line and more
+        commandLine += buf.toString('utf8', 0, i)
+        var cmd = handleCommand(commandLine)
+        commandLine = ''
+        payloadSink = cmd.sink
+        commandSource = cmd.source
+        var nextBuf = buf.slice(i + 1)
+        readNext = function () {
+          // console.error('reading next')
+          if (nextBuf.length)
+            next(null, nextBuf)
+          else
+            read(null, next)
+        }
+        // console.error('cmd', commandLine, 'sourcecb', sourceCb)
+        if (sourceCb)
+          // console.error('SRCCB'),
+          source(null, sourceCb)
+      }
+    })
+  }
+
+  return {
+    source: source,
+    sink: sink
   }
 }

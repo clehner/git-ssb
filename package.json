@@ -9,7 +9,6 @@
     "looper": "^3.0.0",
     "parse-git-config": "^0.3.1",
     "pull-stream": "^3.1.0",
-    "pull-utf8-decoder": "^1.0.1",
     "ssb-client": "^3.0.0",
     "ssb-config": "^1.1.0",
     "ssb-keys": "^4.0.10",

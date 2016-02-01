@@ -1,5 +1,4 @@
-var toPull = require('stream-to-pull-stream')
-var GitFastImportParser = require('git-fast-import-parser')
+var gitFastImportSink = require('git-fast-import-parser')
 
 var verbosity = 1
 
@@ -69,15 +68,21 @@ function listSource() {
   ].join('\n') + '\n\n')
 }
 
-function gitFastImportSink(read) {
-  read(end, function next(end, data) {
-    if (end === true) return
-    if (end) throw end
-
-    console.error('git fast import:', data)
-    read(null, next)
-    // throw new Error('Not implemented')
-  })
+function gitFastImport() {
+  return {
+    sink: gitFastImportSink(function (type) {
+      if (verbosity > 1)
+        console.error('import', type)
+    }),
+    source: function (end, cb) {
+      console.error('fast import source')
+      /*
+      setTimeout(function () {
+        cb(null, 'ok\n')
+      }, 1000)
+      */
+    }
+  }
 }
 
 // return a duplex
@@ -95,9 +100,7 @@ function handleCommand(line, cb) {
       source: listSource()
     }
   if (line == 'export')
-    return {
-      sink: gitFastImportSink
-    }
+    return gitFastImport()
   if (line.indexOf('option') === 0)
     return {
       source: optionSource(line)
@@ -117,7 +120,6 @@ module.exports = function (sbot) {
   var sourceCb
 
   function source(end, cb) {
-    // console.error('SRC')
     if (commandSource) {
       commandSource(end, function (end, data) {
         // console.error('cmd source', end, JSON.stringify(data))
@@ -168,10 +170,9 @@ module.exports = function (sbot) {
       if (verbosity > 2)
         console.error('>', end || JSON.stringify(buf.toString('utf8')))
 
-      // TODO: make this UTF8-safe
       var i = buf.indexOf('\n')
       if (i === 0) {
-        // console.error('commands done being sent')
+        console.error('commands done being sent')
         // got empty line: commands are done
         inPayload = true
         if (!payloadSink)
@@ -194,6 +195,15 @@ module.exports = function (sbot) {
         payloadSink = cmd.sink
         commandSource = cmd.source
         var nextBuf = buf.slice(i + 1)
+        if (payloadSink) {
+          // the man page says the command stream is terminated by a blank
+          // line, but i see export being followed by payload without a blank
+          // line.
+          if (nextBuf.length)
+            payloadBuf = nextBuf
+          payloadSink(payloadRead)
+          return
+        }
         readNext = function () {
           // console.error('reading next')
           if (nextBuf.length)

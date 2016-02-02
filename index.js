@@ -1,15 +1,20 @@
 var gitFastImportSink = require('git-fast-import-parser')
+var utf8 = require('pull-utf8-decoder')
+var crypto = require('crypto')
 
-var verbosity = 1
+var options = {
+  verbosity: 1,
+  progress: false
+}
 
 function handleOption(name, value) {
   switch (name) {
     case 'verbosity':
-      verbosity = +value || 0
+      options.verbosity = +value || 0
       // console.error("ok verbo")
       return true
     case 'progress':
-      progress = !!value && value !== 'false'
+      options.progress = !!value && value !== 'false'
       return true
     default:
       console.error('unknown option', name + ': ' + value)
@@ -68,11 +73,51 @@ function listSource() {
   ].join('\n') + '\n\n')
 }
 
+function createHash() {
+  var hash = crypto.createHash('sha256')
+  var hasher = pull.through(function (data) {
+    hash.update(data)
+  }, function () {
+    hasher.digest = '&'+hash.digest('base64')+'.sha256'
+  })
+  return hasher
+}
+
 function gitFastImport() {
   return {
-    sink: gitFastImportSink(function (type) {
-      if (verbosity > 1)
-        console.error('import', type)
+    sink: gitFastImportSink(options, {
+      commit: function (commit) {
+        if (options.verbosity >= 2)
+          console.error('commit', commit)
+        // commit.message: str
+        // commit.ref
+        // commit.author, commit.committer, commit.from, commit.merge[0]
+      },
+      commitData: function (source, cb) {
+        if (options.verbosity >= 2)
+          console.error('commit data')
+        pull(
+          source,
+          utf8(),
+          pull.drain(source, function (err, chunks) {
+            cb(err, chunks && chunks.join(''))
+          })
+        )
+      },
+      blobData: function (source) {
+        if (options.verbosity >= 2)
+          console.error('blob data')
+        return
+        var hasher = createHash()
+        pull(
+          source,
+          hasher,
+          sbot.blobs.add(function (err) {
+            cb(err, hasher.digest)
+          })
+        )
+        // pull(source, hasher, sbot.blobs.add)
+      }
     }),
     source: function (end, cb) {
       console.error('fast import source')
@@ -89,7 +134,7 @@ function gitFastImport() {
 // source part handles command response data
 // sink part handles a payload (optional)
 function handleCommand(line, cb) {
-  if (verbosity > 1)
+  if (options.verbosity > 1)
     console.error('command:', line)
   if (line == 'capabilities')
     return {
@@ -146,7 +191,10 @@ module.exports = function (sbot) {
     var commandLine = ''
 
     function payloadRead(end, cb) {
-      if (end) return read(end)
+      if (end) return read(end, function () {
+        throw new Error
+        console.error('end', end)
+      })
       if (payloadBuf) {
         // read initial buffered chunk of payload
         var buf = payloadBuf
@@ -167,8 +215,10 @@ module.exports = function (sbot) {
       if (end === true) return console.error('end')
       if (end) throw end
 
-      if (verbosity > 2)
+    /*
+      if (options.verbosity > 2)
         console.error('>', end || JSON.stringify(buf.toString('utf8')))
+        */
 
       var i = buf.indexOf('\n')
       if (i === 0) {

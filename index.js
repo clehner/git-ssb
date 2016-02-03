@@ -1,6 +1,7 @@
 var gitFastImportSink = require('git-fast-import-parser')
 var utf8 = require('pull-utf8-decoder')
 var crypto = require('crypto')
+var packCodec = require('js-git/lib/pack-codec')
 
 var options = {
   verbosity: 1,
@@ -46,8 +47,9 @@ function endSource(data) {
 function capabilitiesSource() {
   return endSource([
     'option',
-    'import',
-    'export',
+    // 'import',
+    // 'export',
+    'connect',
     'refspec refs/heads/*:refs/ssb/heads/*',
     'refspec refs/tags/*:refs/ssb/tags/*',
   ].join('\n') + '\n\n')
@@ -83,74 +85,165 @@ function createHash() {
   return hasher
 }
 
-function gitFastImport() {
-  return {
-    sink: gitFastImportSink(options, {
-      commit: function (commit) {
-        if (options.verbosity >= 2)
-          console.error('commit', commit)
-        // commit.message: str
-        // commit.ref
-        // commit.author, commit.committer, commit.from, commit.merge[0]
-      },
-      commitData: function (source, cb) {
-        if (options.verbosity >= 2)
-          console.error('commit data')
-        pull(
-          source,
-          utf8(),
-          pull.drain(source, function (err, chunks) {
-            cb(err, chunks && chunks.join(''))
-          })
-        )
-      },
-      blobData: function (source) {
-        if (options.verbosity >= 2)
-          console.error('blob data')
-        return
-        var hasher = createHash()
-        pull(
-          source,
-          hasher,
-          sbot.blobs.add(function (err) {
-            cb(err, hasher.digest)
-          })
-        )
-        // pull(source, hasher, sbot.blobs.add)
-      }
-    }),
-    source: function (end, cb) {
-      console.error('fast import source')
-      /*
-      setTimeout(function () {
-        cb(null, 'ok\n')
-      }, 1000)
-      */
+function uploadPack(read) {
+  return function (abort, cb) {
+    cb('upload pack not implemented')
+  }
+  // throw new Error('upload pack')
+}
+
+// wrap a js-git function to turn it into a through
+function throughEmit(read, fn) {
+  var ended
+  var queue = [], decode = fn(function emit(data) {
+    queue.push(data)
+  })
+
+  return function readDecode(abort, cb) {
+    if (ended) return cb(ended)
+    if (queue.length) {
+      var obj = queue.shift()
+      return cb(obj ? null : true, obj)
     }
+    read(abort, function (end, data) {
+      if (ended = end) {
+        decode()
+      } else {
+        decode(data)
+        readDecode(abort, cb)
+      }
+    })
   }
 }
 
-// return a duplex
-// source part handles command response data
-// sink part handles a payload (optional)
-function handleCommand(line, cb) {
-  if (options.verbosity > 1)
-    console.error('command:', line)
+function getRefs() {
+  return function (err, cb) {
+    if (err === true) return
+    if (err) throw err
+    // TODO
+    cb(true)
+  }
+}
+
+function receivePackLineEncode(read) {
+  //return a readable function!
+  return function (end, cb) {
+    read(end, function (end, data) {
+      var len = data ? data.length : 0
+      cb(end, ('000' + len.toString(16)).substr(-4) + data + '\n')
+    })
+  }
+}
+
+var capabilitiesList = [
+  'delete-refs',
+]
+
+function receivePackHeader() {
+  var readRef = getRefs()
+  var first = true
+  return receivePackLineEncode(function (abort, cb) {
+    readRef(abort, function (end, hash, ref) {
+      if (first) {
+        first = false
+        if (end) {
+          hash = '0000000000000000000000000000000000000000'
+          ref = 'capabilities^{}'
+        }
+        ref += '\0' + capabilitiesList.join(' ')
+      }
+      cb(end, hash + ' ' + ref)
+    })
+  })
+}
+
+function receivePack() {
+  var decoder
+
+  return function (abort, cb) {
+    cb(new Error('receive pack not implemented'))
+  }
+
+  /*
+  var ourRefs = receivePackHeader()
+
+  return {
+    sink: function (read) {
+      console.error('recieve pack sink')
+      decoder = throughEmit(read, packCodec.decodePack)
+      decoder(null, function (end, data) {
+        console.error('object', end, data)
+      })
+    },
+
+    source: function (end, cb) {
+      console.error('receive pack source')
+      // if (end) return cb(end)
+      if (ourRefs) {
+        ourRefs(end, cb)
+      }
+    }
+  }
+  */
+}
+
+function handleCommand(line, read) {
   if (line == 'capabilities')
-    return {
-      source: capabilitiesSource()
-    }
+    return capabilitiesSource()
+
   if (line == 'list')
-    return {
-      source: listSource()
-    }
-  if (line == 'export')
-    return gitFastImport()
-  if (line.indexOf('option') === 0)
-    return {
-      source: optionSource(line)
-    }
-  throw new Error('Unknown command ' + line)
+    return listSource()
+
+  if (line == 'connect git-upload-pack')
+    return uploadPack(read)
+
+  if (line == 'connect git-receive-pack')
+    return receivePack(read)
+
+  if (line.substr(0, 6) == 'option')
+    return optionSource(line)
+
+  return function (abort, cb) {
+    cb(new Error('unknown command ' + line))
+  }
+}
+
+// transform a readable into a readable that can be read by line or as data
+function liner(read) {
+  var line = ''
+  var bufQueue = []
+  var ended
+
+  function readData(end, cb) {
+    if (ended)
+      cb(ended)
+    else if (bufQueue.length)
+      cb(end, bufQueue.shift())
+    else
+      read(end, cb)
+  }
+
+  function readLine(abort, cb) {
+    readData(abort, function next(end, buf) {
+      if (ended = end) return cb(end)
+      var i = buf.indexOf('\n')
+      if (i === -1) {
+        line += buf.toString('ascii')
+        read(null, next)
+      } else {
+        var l = line + buf.toString('ascii', 0, i)
+        line = ''
+        if (i + 1 < buf.length)
+          bufQueue.push(buf.slice(i + 1))
+        cb(null, l)
+      }
+    })
+  }
+
+  return {
+    readData: readData,
+    readLine: readLine
+  }
 }
 
 // protocol: commands separated by newlines, followed by optional payload.
@@ -160,117 +253,48 @@ function handleCommand(line, cb) {
 // e.g. git says list. we respond with list of refs
 
 module.exports = function (sbot) {
-  var commandSource
-  var readNext
-  var sourceCb
+  var ended
 
-  function source(end, cb) {
-    if (commandSource) {
-      commandSource(end, function (end, data) {
-        // console.error('cmd source', end, JSON.stringify(data))
-        if (end === true) {
-          // console.error('READ next'),
-          sourceCb = cb
-          readNext()
-        } else if (end) {
-          throw err // TODO
-        } else {
-          // console.error('CB'),
-          cb(end, data)
-        }
+  return function (read) {
+    var lines = liner(read)
+    var command
+
+    function getCommand(cb) {
+      lines.readLine(null, function (end, line) {
+        if (ended = end)
+          return cb(end)
+
+        if (options.verbosity > 1)
+          console.error('command:', line)
+
+        var cmdSource = handleCommand(line)
+        cb(null, cmdSource)
       })
-      // sourceCb = null
-    } else {
-      sourceCb = cb
     }
-  }
 
-  function sink(read) {
-    var payloadBuf
-    var inPayload = false
-    var commandLine = ''
+    return function next(abort, cb) {
+      if (ended) return cb(ended)
 
-    function payloadRead(end, cb) {
-      if (end) return read(end, function () {
-        throw new Error
-        console.error('end', end)
-      })
-      if (payloadBuf) {
-        // read initial buffered chunk of payload
-        var buf = payloadBuf
-        payloadBuf = null
-        // payloadCb = cb
-        cb(null, buf)
-      } else {
-        // pass the rest of the stream to the payload sink
-        read(end, cb)
+      if (!command) {
+        if (abort) return
+        getCommand(function (end, cmd) {
+          command = cmd
+          next(end, cb)
+        })
+        return
       }
-    }
 
-    read(null, function next(end, buf) {
-      if (inPayload)
-        throw new Error('in payload')
-        // return payloadCb(end, buf)
-
-      if (end === true) return console.error('end')
-      if (end) throw end
-
-    /*
-      if (options.verbosity > 2)
-        console.error('>', end || JSON.stringify(buf.toString('utf8')))
-        */
-
-      var i = buf.indexOf('\n')
-      if (i === 0) {
-        console.error('commands done being sent')
-        // got empty line: commands are done
-        inPayload = true
-        if (!payloadSink)
-          return read(true, function () {
-            console.error('no payload sink')
-          })
-        payloadBuf = buf.slice(1)
-        payloadSink(payloadRead)
-      } else if (i === -1) {
-        // console.error('in command')
-        // got part of a command
-        commandLine += buf.toString('utf8')
-        read(null, next)
-      } else {
-        // console.error('and more')
-        // got command line and more
-        commandLine += buf.toString('utf8', 0, i)
-        var cmd = handleCommand(commandLine)
-        commandLine = ''
-        payloadSink = cmd.sink
-        commandSource = cmd.source
-        var nextBuf = buf.slice(i + 1)
-        if (payloadSink) {
-          // the man page says the command stream is terminated by a blank
-          // line, but i see export being followed by payload without a blank
-          // line.
-          if (nextBuf.length)
-            payloadBuf = nextBuf
-          payloadSink(payloadRead)
-          return
-        }
-        readNext = function () {
-          // console.error('reading next')
-          if (nextBuf.length)
-            next(null, nextBuf)
+      command(abort, function (err, data) {
+        if (err) {
+          command = null
+          if (err !== true)
+            cb(err, data)
           else
-            read(null, next)
+            next(abort, cb)
+        } else {
+          cb(null, data)
         }
-        // console.error('cmd', commandLine, 'sourcecb', sourceCb)
-        if (sourceCb)
-          // console.error('SRCCB'),
-          source(null, sourceCb)
-      }
-    })
-  }
-
-  return {
-    source: source,
-    sink: sink
+      })
+    }
   }
 }

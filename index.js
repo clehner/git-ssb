@@ -2,6 +2,8 @@ var gitFastImportSink = require('git-fast-import-parser')
 var utf8 = require('pull-utf8-decoder')
 var crypto = require('crypto')
 var packCodec = require('js-git/lib/pack-codec')
+var pull = require('pull-stream')
+var pkg = require('./package')
 
 var options = {
   verbosity: 1,
@@ -55,17 +57,20 @@ function capabilitiesSource() {
   ].join('\n') + '\n\n')
 }
 
-function optionSource(line) {
-  var m = line.match(/^option ([^ ]*) (.*)$/)
-  var msg
-  if (!m) {
-    msg = 'error missing option'
-  } else {
-    msg = handleOption(m[1], m[2])
-    msg = (msg === true) ? 'ok'
-        : (msg === false) ? 'unsupported'
-        : 'error ' + msg
-  }
+function split2(str) {
+  var i = str.indexOf(' ')
+  return (i === -1) ? [str, ''] : [
+    str.substr(0, i),
+    str.substr(i + 1)
+  ]
+}
+
+function optionSource(cmd) {
+  var args = split2(cmd)
+  var msg = handleOption(args[0], args[1])
+  msg = (msg === true) ? 'ok'
+      : (msg === false) ? 'unsupported'
+      : 'error ' + msg
   return endSource(msg + '\n')
 }
 
@@ -117,94 +122,235 @@ function throughEmit(read, fn) {
 }
 
 function getRefs() {
+  return pull.values([
+    {
+      hash: '78beaedba9878623cea3862cf18e098cfb901e10',
+      name: 'refs/heads/master'
+    },
+    {
+      hash: '78beaedba9878623cea3862cf18e098cfb901e10',
+      name: 'refs/remotes/cel/master'
+    }
+  ])
+  /*
   return function (err, cb) {
     if (err === true) return
     if (err) throw err
     // TODO
     cb(true)
   }
-}
-
-function receivePackLineEncode(read) {
-  //return a readable function!
-  return function (end, cb) {
-    read(end, function (end, data) {
-      var len = data ? data.length : 0
-      cb(end, ('000' + len.toString(16)).substr(-4) + data + '\n')
-    })
-  }
-}
-
-var capabilitiesList = [
-  'delete-refs',
-]
-
-function receivePackHeader() {
-  var readRef = getRefs()
-  var first = true
-  return receivePackLineEncode(function (abort, cb) {
-    readRef(abort, function (end, hash, ref) {
-      if (first) {
-        first = false
-        if (end) {
-          hash = '0000000000000000000000000000000000000000'
-          ref = 'capabilities^{}'
-        }
-        ref += '\0' + capabilitiesList.join(' ')
-      }
-      cb(end, hash + ' ' + ref)
-    })
-  })
-}
-
-function receivePack() {
-  var decoder
-
-  return function (abort, cb) {
-    cb(new Error('receive pack not implemented'))
-  }
-
-  /*
-  var ourRefs = receivePackHeader()
-
-  return {
-    sink: function (read) {
-      console.error('recieve pack sink')
-      decoder = throughEmit(read, packCodec.decodePack)
-      decoder(null, function (end, data) {
-        console.error('object', end, data)
-      })
-    },
-
-    source: function (end, cb) {
-      console.error('receive pack source')
-      // if (end) return cb(end)
-      if (ourRefs) {
-        ourRefs(end, cb)
-      }
-    }
-  }
   */
 }
 
-function handleCommand(line, read) {
-  if (line == 'capabilities')
-    return capabilitiesSource()
+function packLineEncode(read) {
+  var ended
+  return function (end, cb) {
+    if (ended) return cb(ended)
+    read(end, function (end, data) {
+      if (ended = end) {
+        cb(end)
+      } else {
+        var len = data ? data.length + 5 : 0
+        cb(end, ('000' + len.toString(16)).substr(-4) + data + '\n')
+      }
+    })
+  }
+}
 
-  if (line == 'list')
-    return listSource()
+function packLineDecode(read) {
+  var line = ''
+  var bufQueue = []
+  var ended
 
-  if (line == 'connect git-upload-pack')
-    return uploadPack(read)
+  function readData(end, cb) {
+    if (ended)
+      cb(ended)
+    else if (bufQueue.length)
+      cb(end, bufQueue.shift())
+    else
+      read(end, cb)
+  }
 
-  if (line == 'connect git-receive-pack')
-    return receivePack(read)
+  function readLine(abort, cb) {
+    cb(new Error('not implemented'))
+  }
 
-  if (line.substr(0, 6) == 'option')
-    return optionSource(line)
+  return {
+    readData: readData,
+    readLine: readLine
+  }
+}
 
+/*
+TODO: investigate capabilities
+report-status delete-refs side-band-64k quiet atomic ofs-delta
+*/
+
+// Get a line for each ref that we have. The first line also has capabilities.
+// Wrap with packLineEncode.
+function receivePackHeader(capabilities) {
+  var readRef = getRefs()
+  var first = true
+  var ended
   return function (abort, cb) {
-    cb(new Error('unknown command ' + line))
+    if (ended) return cb(true)
+    readRef(abort, function (end, ref) {
+      ended = end
+      var name = ref && ref.name
+      var hash = ref && ref.hash
+      if (first) {
+        first = false
+        if (end) {
+          // use placeholder data if there are no refs
+          hash = '0000000000000000000000000000000000000000'
+          name = 'capabilities^{}'
+        }
+        name += '\0' + capabilities.join(' ')
+      } else if (end) {
+        return cb(true)
+      }
+      cb(null, hash + ' ' + name)
+    })
+  }
+}
+
+function receiveActualPack(read, onObject, onEnd) {
+  var decoder
+  decoder = throughEmit(read, packCodec.decodePack)
+  decoder(null, function next(end, data) {
+    if (end)
+      return onEnd(end === true ? null : end)
+    var err = onObject(data)
+    decoder(err, next)
+  })
+}
+
+function concat() {
+  var sources = [].slice.call(arguments)
+  var ended
+  return function read(abort, cb) {
+    if (ended) return cb(ended)
+    if (sources.length === 0) return cb(true)
+    sources[0](abort, function (end, data) {
+      if (end === true) {
+        sources.shift()
+        read(abort, cb)
+      } else if (ended = end) {
+        cb(end)
+      } else {
+        cb(null, data)
+      }
+    })
+  }
+}
+
+function receivePack(read) {
+  var ended
+  var sendRefs = receivePackHeader([
+    'agent=git-remote-ssb/' + pkg.version
+  ])
+
+  /*
+  var theirRefs = receivePackLineDecode(read)
+  theirRefs(null, function (caps) {
+    console.error('caps', caps)
+  }, function next(end, ref) {
+    console.error('ref', end, ref)
+    if (end === true) {
+      receiveActualPack(read, gotObject, function onDone(err) {
+        if (err);
+      })
+    } else if (end) {
+      ended = end
+    } else {
+      read(null, next)
+    }
+  })
+  */
+
+  function receiveRefs(readLine, cb) {
+    var refs = []
+    readLine(null, function (end, line) {
+      if (end) {
+        if (end === true)
+          end = new Error('refs line ended early')
+        cb(end, refs)
+      } else if (line === '') {
+        cb(null, refs)
+      } else {
+        var args = split2(line)
+        refs.push({
+          hash: args[0],
+          name: args[1]
+        })
+      }
+    })
+  }
+
+  function gotObject(obj) {
+    // got a git object from the received pack
+    console.error('object', end, data)
+  }
+
+    // if (ended) return cb(ended)
+  return packLineEncode(
+    concat(
+      sendRefs,
+      pull.once(''),
+      function (abort, cb) {
+        if (abort) return
+        var lines = packLineDecode(read)
+        receiveRefs(lines.readLine, function (err, refs) {
+          console.error('refs', refs, err)
+          if (err) return cb(err)
+          receiveActualPack(lines.readData, gotObject, function (err) {
+            if (err) return cb(err)
+            cb(true)
+          })
+        })
+      },
+      pull.once('unpack ok')
+    )
+  )
+}
+
+function prepend(data, read) {
+  var done
+  return function (end, cb) {
+    if (done) {
+      read(end, cb)
+    } else {
+      done = true
+      cb(null, data)
+    }
+  }
+}
+
+function handleConnect(cmd, read) {
+  var args = split2(cmd)
+  switch (args[0]) {
+    case 'git-upload-pack':
+      return prepend('\n', uploadPack(read))
+    case 'git-receive-pack':
+      return prepend('\n', receivePack(read))
+    default:
+      return pull.error(new Error('Unknown service ' + args[0]))
+  }
+}
+
+function handleCommand(line, read) {
+  var args = split2(line)
+  switch (args[0]) {
+    case 'capabilities':
+      return capabilitiesSource()
+    case 'list':
+      return listSource()
+    case 'connect':
+      return handleConnect(args[1], read)
+    case 'option':
+      return optionSource(args[1])
+    default:
+      return pull.error(new Error('Unknown command ' + args[0]))
   }
 }
 
@@ -267,7 +413,7 @@ module.exports = function (sbot) {
         if (options.verbosity > 1)
           console.error('command:', line)
 
-        var cmdSource = handleCommand(line)
+        var cmdSource = handleCommand(line, lines.readData)
         cb(null, cmdSource)
       })
     }

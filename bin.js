@@ -5,6 +5,7 @@ var ssbKeys = require('ssb-keys')
 var path = require('path')
 var toPull = require('stream-to-pull-stream')
 var pull = require('pull-stream')
+var ssbGit = require('ssb-git')
 
 var args = process.argv.slice(2)
 if (args.length < 2)
@@ -28,13 +29,22 @@ require('ssb-client')(keys, {
   host: ssbConfig.host || 'localhost'
 }, function (err, sbot) {
   if (err) throw err
-  pull(
-    toPull(process.stdin),
-    require('.')(sbot),
-    toPull(process.stdout, function (err) {
-      sbot.close(err, function (err) {
-        if (err) throw err
+  ssbGit.getRepo(sbot, root, function (err, repo) {
+    if (err) {
+      if (err.name == 'NotFoundError')
+        throw new Error('Repo not found with ID ' + root)
+      else
+        throw err
+    }
+
+    pull(
+      toPull(process.stdin),
+      require('pull-git-remote-helper')(repo),
+      toPull(process.stdout, function (err) {
+        sbot.close(err, function (err) {
+          if (err) throw err
+        })
       })
-    })
-  )
+    )
+  })
 })

@@ -20,7 +20,7 @@ if (!ref.isMsgId(root))
     throw new Error(root || 'URL', 'is not a valid SSB message ID')
 
 var gitSsbConfig = require('parse-git-config').sync()['ssb']
-var appName = gitSsbConfig.appname || process.env.ssb_appname
+var appName = process.env.ssb_appname || gitSsbConfig.appname
 var ssbConfig = require('ssb-config/inject')(appName, gitSsbConfig)
 
 var keys = ssbKeys.loadOrCreateSync(path.join(ssbConfig.path, 'secret'))

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 var ref = require('ssb-ref')
-var ssbKeys = require('ssb-keys')
 var path = require('path')
 var toPull = require('stream-to-pull-stream')
 var pull = require('pull-stream')
@@ -19,15 +18,7 @@ var root = m && m[1]
 if (!ref.isMsgId(root))
     throw new Error(root || 'URL', 'is not a valid SSB message ID')
 
-var gitSsbConfig = require('parse-git-config').sync()['ssb']
-var appName = process.env.ssb_appname || gitSsbConfig.appname
-var ssbConfig = require('ssb-config/inject')(appName, gitSsbConfig)
-
-var keys = ssbKeys.loadOrCreateSync(path.join(ssbConfig.path, 'secret'))
-require('ssb-client')(keys, {
-  port: ssbConfig.port,
-  host: ssbConfig.host || 'localhost'
-}, function (err, sbot) {
+require('./client')(function (err, sbot) {
   if (err) throw err
   ssbGit.getRepo(sbot, root, function (err, repo) {
     if (err) {

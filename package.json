@@ -2,7 +2,10 @@
   "name": "git-remote-ssb",
   "version": "0.0.0",
   "description": "git remote helper for secure-scuttlebutt (ssb)",
-  "bin": "bin.js",
+  "bin": {
+    "git-remote-ssb": "git-remote-ssb",
+    "git-ssb": "bin.js"
+  },
   "main": "index.js",
   "dependencies": {
     "parse-git-config": "^0.3.1",

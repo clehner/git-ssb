@@ -32,8 +32,22 @@ Clone a repo from SSB:
 
     git clone ssb://<msgId> repo
 
+## Configuration
+
+As with [patchwork][], `git-remote-ssb` reads the `ssb_appname`
+environmental variable when deciding what scuttlebot instance to connect to.
+`git-remote-ssb` also uses [git's config][git config] to configure the
+scuttlebot client. To make it so a repo only gets
+used in your [testing environment][patchwork-testing], you can configure the
+repo as follows:
+
+    git config ssb.app_name test
+
 [secure-scuttlebutt]: https://github.com/ssbc/secure-scuttlebutt
 [git remote helper]: http://git-scm.com/docs/git-remote-helpers
+[git config]: http://git-scm.com/docs/git-config
+[patchwork]: https://github.com/ssbc/patchwork
+[patchwork-testing]: https://github.com/ssbc/patchwork/blob/3f6d2d60b66361c3c926ff0a9e81847e71c8cfdd/docs/TESTING.md
 
 ## License
 

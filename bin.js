@@ -29,7 +29,7 @@ switch (args[0]) {
 }
 
 function createRepo(remoteName) {
-  require('./client')(function (err, sbot) {
+  require('./lib/client')(function (err, sbot) {
     if (err) throw err
     ssbGit.createRepo(sbot, function (err, repo) {
       if (err) throw err

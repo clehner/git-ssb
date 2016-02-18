@@ -31,8 +31,9 @@ require('./lib/client')(function (err, sbot) {
       toPull(process.stdin),
       require('pull-git-remote-helper')(repo),
       toPull(process.stdout, function (err) {
+        if (err) throw err
         repo.close()
-        sbot.close(err, function (err) {
+        sbot.close(null, function (err) {
           if (err) throw err
         })
       })

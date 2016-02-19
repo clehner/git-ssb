@@ -6,7 +6,7 @@ var pull = require('pull-stream')
 var args = process.argv.slice(2)
 switch (args[0]) {
   case 'create':
-    createRepo(args[1])
+    createRepo(args[1] || 'ssb')
     break
 
   case undefined:
@@ -37,8 +37,7 @@ function createRepo(remoteName) {
       console.log(url)
       repo.close()
       sbot.close()
-      if (remoteName)
-        spawn('git', ['remote', 'add', remoteName, url], {stdio: 'inherit'})
+      spawn('git', ['remote', 'add', remoteName, url], {stdio: 'inherit'})
     })
   })
 }

@@ -34,12 +34,12 @@ Clone a repo from SSB:
 
 ## Configuration
 
-As with [patchwork][], `git-remote-ssb` reads the `ssb_appname`
-environmental variable when deciding what scuttlebot instance to connect to.
-`git-remote-ssb` also uses [git's config][git config] to configure the
-scuttlebot client. To make it so a repo only gets
-used in your [testing environment][patchwork-testing], you can configure the
-repo as follows:
+As with [patchwork][], `git-remote-ssb` reads the `ssb_appname` environment
+variable when deciding what scuttlebot instance to connect to.
+`git-remote-ssb` also uses [git's config][git config] to get the appname if the
+environment variable is not set. To make it so a repo only gets used in your
+[testing environment][patchwork-testing], you can configure the repo as
+follows:
 
     git config ssb.app_name test
 

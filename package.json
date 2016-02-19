@@ -8,7 +8,6 @@
   },
   "main": "index.js",
   "dependencies": {
-    "parse-git-config": "^0.3.1",
     "pull-git-remote-helper": "^1.0.0",
     "ssb-client": "^3.0.0",
     "ssb-config": "^1.1.0",

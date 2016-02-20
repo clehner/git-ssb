@@ -40,3 +40,4 @@ require('./lib/client')(function (err, sbot) {
     )
   })
 })
+// vi: ft=javascript

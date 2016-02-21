@@ -9,7 +9,7 @@ switch (args[0]) {
     createRepo(args[1] || 'ssb')
     break
 
-  case 'serve':
+  case 'web':
     startServer(args[1])
     break
 
@@ -20,7 +20,7 @@ switch (args[0]) {
       '',
       'Commands:',
       '  create    Create a git repo on SSB.',
-      '  serve     Serve a web server for repos.',
+      '  web       Serve a web server for repos.',
     ].join('\n'))
     process.exit(0)
 

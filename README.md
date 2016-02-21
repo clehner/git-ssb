@@ -1,11 +1,12 @@
-# git-remote-ssb
+# git-ssb
 
-A [git remote helper][] for ssb:// URLs. It lets you use git repos over [secure-scuttlebutt][].
+Git repos on [secure-scuttlebutt][].
 
-`git-remote-ssb` supports fetching from and pushing to ssb git repos.
+Includes:
 
-This package also includes a command-line tool `git-ssb` for doing things with
-ssb git repos.
+- A [git remote helper][], `git-remote-ssb` for `ssb://` URLs
+
+- A command line tool `git-ssb` for managing SSB git repos
 
 ## Install
 
@@ -31,6 +32,10 @@ Publish an existing repo to SSB:
 Clone a repo from SSB:
 
     git clone ssb://<msgId> repo
+
+Run the built-in web server for browsing repo:
+
+    git ssb web
 
 ## Configuration
 

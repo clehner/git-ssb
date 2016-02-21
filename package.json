@@ -1,5 +1,5 @@
 {
-  "name": "git-remote-ssb",
+  "name": "git-ssb",
   "version": "0.0.0",
   "description": "git remote helper for secure-scuttlebutt (ssb)",
   "bin": {
@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/clehner/git-remote-ssb"
+    "url": "https://github.com/clehner/git-ssb"
   },
   "keywords": [
     "secure-scuttlebutt",
@@ -32,6 +32,6 @@
   "author": "Charles Lehner (http://celehner.com/)",
   "license": "Fair",
   "bugs": {
-    "url": "https://github.com/clehner/git-remote-ssb/issues"
+    "url": "https://github.com/clehner/git-ssb/issues"
   }
 }

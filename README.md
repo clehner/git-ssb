@@ -8,6 +8,8 @@ Includes:
 
 - A command line tool `git-ssb` for managing SSB git repos
 
+- A web server for browsing repos locally
+
 ## Install
 
 ```

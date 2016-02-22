@@ -27,6 +27,9 @@ require('./lib/client')(function (err, sbot) {
         throw err
     }
 
+    // keep alive
+    setInterval(sbot.whoami, 15e3)
+
     pull(
       toPull(process.stdin),
       require('pull-git-remote-helper')(repo),

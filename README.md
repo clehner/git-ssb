@@ -13,7 +13,7 @@ Includes:
 ## Install
 
 ```
-npm install -g git-remote-ssb
+npm install -g git-ssb
 ```
 
 ## Usage
@@ -41,9 +41,9 @@ Run the built-in web server for browsing repo:
 
 ## Configuration
 
-As with [patchwork][], `git-remote-ssb` reads the `ssb_appname` environment
+As with [patchwork][], `git-ssb` reads the `ssb_appname` environment
 variable when deciding what scuttlebot instance to connect to.
-`git-remote-ssb` also uses [git's config][git config] to get the appname if the
+`git-ssb` also uses [git's config][git config] to get the appname if the
 environment variable is not set. To make it so a repo only gets used in your
 [testing environment][patchwork-testing], you can configure the repo as
 follows:

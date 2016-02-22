@@ -1,6 +1,6 @@
 {
   "name": "git-ssb",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "git remote helper for secure-scuttlebutt (ssb)",
   "bin": {
     "git-remote-ssb": "git-remote-ssb",

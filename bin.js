@@ -1,6 +1,10 @@
-#!/usr/bin/env node
+#!/bin/sh
+':' //; exec "$(command -v nodejs || command -v node)" "$0" "$@"
+// http://unix.stackexchange.com/questions/65235/universal-node-js-shebang
+// vi: ft=javascript
+
 var spawn = require('child_process').spawn
-var ssbGit = require('ssb-git')
+var ssbGit = require('ssb-git-repo')
 var pull = require('pull-stream')
 
 var args = process.argv.slice(2)
@@ -54,7 +58,7 @@ function createRepo(remoteName) {
 function startServer(listenAddr) {
   getSbot(function (err, sbot) {
     if (err) throw err
-    require('./lib/server')(sbot, listenAddr, function (err) {
+    require('git-ssb-web')(sbot, listenAddr, function (err) {
       sbot.close()
       if (err) throw err
     })

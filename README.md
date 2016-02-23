@@ -1,14 +1,12 @@
 # git-ssb
 
-Git repos on [secure-scuttlebutt][].
+Git repos on [secure-scuttlebutt (SSB)][ssb].
 
-Includes:
-
-- A [git remote helper][], `git-remote-ssb` for `ssb://` URLs
+This package includes:
 
 - A command line tool `git-ssb` for managing SSB git repos
-
-- A web server for browsing repos locally
+- A git remote helper [`git-remote-ssb`][] for using `ssb://` URLs with git
+- A web server [`git-ssb-web`][] for browsing repos locally
 
 ## Install
 
@@ -35,7 +33,7 @@ Clone a repo from SSB:
 
     git clone ssb://<msgId> repo
 
-Run the built-in web server for browsing repo:
+Run the web server for browsing repos:
 
     git ssb web
 
@@ -50,11 +48,12 @@ follows:
 
     git config ssb.app_name test
 
-[secure-scuttlebutt]: https://github.com/ssbc/secure-scuttlebutt
-[git remote helper]: http://git-scm.com/docs/git-remote-helpers
+[ssb]: https://github.com/ssbc/secure-scuttlebutt
 [git config]: http://git-scm.com/docs/git-config
 [patchwork]: https://github.com/ssbc/patchwork
 [patchwork-testing]: https://github.com/ssbc/patchwork/blob/3f6d2d60b66361c3c926ff0a9e81847e71c8cfdd/docs/TESTING.md
+[`git-ssb-web`]: https://github.com/clehner/git-ssb-web
+[`git-remote-ssb`]: https://github.com/clehner/git-remote-ssb
 
 ## License
 

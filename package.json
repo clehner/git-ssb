@@ -2,7 +2,10 @@
   "name": "git-ssb",
   "version": "1.0.3",
   "description": "git hosting on secure-scuttlebutt (ssb)",
-  "bin": "bin.js",
+  "bin": {
+    "git-ssb": "bin.js",
+    "git-remote-ssb": "bin.js"
+  },
   "dependencies": {
     "git-remote-ssb": "^1.0.0",
     "git-ssb-web": "^1.0.0",

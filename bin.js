@@ -3,6 +3,14 @@
 // http://unix.stackexchange.com/questions/65235/universal-node-js-shebang
 // vi: ft=javascript
 
+var path = require('path')
+
+var progname = path.basename(process.argv[1])
+if (progname == 'git-remote-ssb') {
+  require('git-remote-ssb/git-remote-ssb')
+  return
+}
+
 var spawn = require('child_process').spawn
 var ssbGit = require('ssb-git-repo')
 var pull = require('pull-stream')

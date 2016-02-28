@@ -22,7 +22,7 @@ switch (args[0]) {
     break
 
   case 'web':
-    startServer(args[1])
+    require('git-ssb-web/server')
     break
 
   case undefined:
@@ -59,16 +59,6 @@ function createRepo(remoteName) {
       repo.close()
       sbot.close()
       spawn('git', ['remote', 'add', remoteName, url], {stdio: 'inherit'})
-    })
-  })
-}
-
-function startServer(listenAddr) {
-  getSbot(function (err, sbot) {
-    if (err) throw err
-    require('git-ssb-web')(sbot, listenAddr, function (err) {
-      sbot.close()
-      if (err) throw err
     })
   })
 }

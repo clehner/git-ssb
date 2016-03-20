@@ -7,15 +7,15 @@
     "git-remote-ssb": "bin.js"
   },
   "dependencies": {
-    "git-remote-ssb": "^1.1.0",
-    "git-ssb-web": "^1.2.0",
+    "git-remote-ssb": "^1.1.1",
+    "git-ssb-web": "^1.4.0",
     "pull-cat": "^1.1.8",
-    "pull-git-remote-helper": "^1.0.0",
+    "pull-git-remote-helper": "^1.2.0",
     "pull-git-repo": "^0.2.1",
-    "ssb-client": "^3.0.0",
+    "ssb-client": "^3.0.1",
     "ssb-config": "^1.1.0",
     "ssb-git-repo": "^1.2.0",
-    "ssb-keys": "^4.0.10",
+    "ssb-keys": "^5.0.0",
     "stream-to-pull-stream": "^1.6.6"
   },
   "devDependencies": {},

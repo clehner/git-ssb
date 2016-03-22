@@ -7,11 +7,10 @@
     "git-remote-ssb": "bin.js"
   },
   "dependencies": {
-    "git-remote-ssb": "^1.1.2",
-    "git-ssb-web": "^1.4.1",
+    "git-remote-ssb": "^1.1.3",
+    "git-ssb-web": "^1.4.3",
     "pull-cat": "^1.1.8",
-    "pull-git-remote-helper": "^1.2.0",
-    "pull-git-repo": "^0.2.1",
+    "pull-git-repo": "^0.2.3",
     "ssb-client": "^3.0.1",
     "ssb-config": "^1.1.0",
     "ssb-git-repo": "^1.4.0",

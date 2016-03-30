@@ -1,5 +1,5 @@
 #!/bin/sh
-':' //; exec "$(command -v nodejs || command -v node)" "$0" "$@"
+':' //; exec "$(command -v node || command -v nodejs)" "$0" "$@"
 // http://unix.stackexchange.com/questions/65235/universal-node-js-shebang
 // vi: ft=javascript
 

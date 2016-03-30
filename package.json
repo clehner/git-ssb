@@ -25,6 +25,7 @@
     "type": "git",
     "url": "https://github.com/clehner/git-ssb"
   },
+  "homepage": "http://git-ssb.celehner.com/%25n92DiQh7ietE%2BR%2BX%2FI403LQoyf2DtR3WQfCkDKlheQU%3D.sha256",
   "keywords": [
     "secure-scuttlebutt",
     "git-remote"

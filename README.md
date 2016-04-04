@@ -33,6 +33,13 @@ Clone a repo from SSB:
 
     git clone ssb://<msgId> repo
 
+Fork a git-ssb repo you have already cloned:
+
+    cd repo
+    git ssb fork mine
+    # edit and commit, then push changes:
+    git push mine
+
 Run the web server for browsing repos:
 
     git ssb web

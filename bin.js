@@ -5,6 +5,7 @@
 
 var path = require('path')
 var proc = require('child_process')
+var ssbRef = require('ssb-ref')
 
 var prog = 'git ssb'
 
@@ -30,6 +31,8 @@ function main() {
   switch (cmd) {
     case 'create':
       return createRepo(config, config._[0] || 'ssb')
+    case 'fork':
+      return forkRepo(config)
     case 'web':
       return require('git-ssb-web/server')
     case 'help':
@@ -49,6 +52,7 @@ function usage(code) {
     '',
     'Commands:',
     '  create    Create a git repo on SSB',
+    '  fork      Fork a git repo on SSB',
     '  web       Serve a web server for repos',
     '  help      Get help about a command')
   process.exit(code)
@@ -77,6 +81,17 @@ function help(cmd) {
         '',
         'Options:',
         '  remote_name   Name of the remote to add. default: \'ssb\'')
+    case 'fork':
+      return out(
+        'Usage: ' + prog + ' fork [<upstream>] <remote_name>',
+        '',
+        '  Create a new git-ssb repo as a fork of another repo',
+        '  and add it as a git remote',
+        '',
+        'Arguments:',
+        '  upstream      id, url, or git remote name of the repo to fork.',
+        '                default: \'origin\' or \'ssb\'',
+        '  remote_name   Name for the new remote')
     case 'web':
       return out(
         'Usage: ' + prog + ' web [<host:port>] [<options>]',
@@ -116,13 +131,24 @@ function hasRemote(name) {
   return !!~remotes.indexOf(name)
 }
 
-function createRepo(config, remoteName) {
+function getRemoteUrl(name) {
+  return proc.spawnSync('git', ['remote', 'get-url', name],
+    {encoding: 'utf8'}).stdout.trim()
+}
+
+function repoId(id) {
+  if (!id) return
+  id = String(id).replace(/^ssb:\/*/, '')
+  return ssbRef.isMsg(id) ? id : null
+}
+
+function createRepo(config, remoteName, upstream) {
   if (hasRemote(remoteName))
     err(1, 'Remote \'' + remoteName + '\' already exists')
   getSbot(config, function (err, sbot) {
     if (err) throw err
     var ssbGit = require('ssb-git-repo')
-    ssbGit.createRepo(sbot, function (err, repo) {
+    ssbGit.createRepo(sbot, {upstream: upstream}, function (err, repo) {
       if (err) throw err
       var url = 'ssb://' + repo.id
       console.log(url)
@@ -131,4 +157,28 @@ function createRepo(config, remoteName) {
       proc.spawn('git', ['remote', 'add', remoteName, url], {stdio: 'inherit'})
     })
   })
+}
+
+function forkRepo(argv) {
+  var upstream, name
+  switch (argv._.length) {
+    case 1:
+      name = argv._[0]
+      upstream = repoId(getRemoteUrl('origin')) || repoId(getRemoteUrl('ssb'))
+      if (!upstream)
+        err(1, 'unable to find git-ssb upstream to fork')
+      break
+    case 2:
+      upstream = repoId(argv._[0]) || repoId(getRemoteUrl(argv._[0]))
+      name = argv._[1]
+      if (!upstream)
+        err(1, 'unable to find git-ssb upstream \'' + argv._[0] + '\'')
+      break
+    default:
+      return help('fork')
+  }
+
+  if (!name) err(1, 'missing remote name')
+
+  createRepo(argv, name, upstream)
 }

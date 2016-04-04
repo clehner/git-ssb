@@ -6,6 +6,7 @@
     "git-ssb": "bin.js",
     "git-remote-ssb": "bin.js"
   },
+  "main": "bin.js",
   "dependencies": {
     "git-remote-ssb": "^1.1.3",
     "git-ssb-web": "^1.4.3",

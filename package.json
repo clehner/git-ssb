@@ -8,14 +8,14 @@
   },
   "main": "bin.js",
   "dependencies": {
-    "git-remote-ssb": "^1.1.3",
-    "git-ssb-web": "^1.11.0",
+    "git-remote-ssb": "^1.1.4",
+    "git-ssb-web": "^1.12.3",
     "ssb-client": "^3.0.1",
-    "ssb-config": "^1.1.0",
-    "ssb-git-repo": "^1.6.0",
+    "ssb-config": "^2.0.0",
+    "ssb-git-repo": "^1.6.3",
     "ssb-ref": "^2.3.0",
     "ssb-keys": "^5.0.0",
-    "stream-to-pull-stream": "^1.6.6"
+    "stream-to-pull-stream": "^1.6.8"
   },
   "repository": {
     "type": "git",

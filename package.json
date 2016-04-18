@@ -8,7 +8,7 @@
   },
   "main": "bin.js",
   "dependencies": {
-    "git-remote-ssb": "^1.1.4",
+    "git-remote-ssb": "^1.1.5",
     "git-ssb-web": "^1.12.3",
     "ssb-client": "^3.0.1",
     "ssb-config": "^2.0.0",

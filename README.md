@@ -59,8 +59,8 @@ follows:
 [git config]: http://git-scm.com/docs/git-config
 [patchwork]: https://github.com/ssbc/patchwork
 [patchwork-testing]: https://github.com/ssbc/patchwork/blob/3f6d2d60b66361c3c926ff0a9e81847e71c8cfdd/docs/TESTING.md
-[`git-ssb-web`]: https://github.com/clehner/git-ssb-web
-[`git-remote-ssb`]: https://github.com/clehner/git-remote-ssb
+[`git-ssb-web`]: %q5d5Du+9WkaSdjc8aJPZm+jMrqgo0tmfR+RcX5ZZ6H4=.sha256
+[`git-remote-ssb`]: %ZVTOK3GA2aewEDI2rPxJqKXEIv4OIUN2swMPE2FeJm8=.sha256
 
 ## License
 

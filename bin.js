@@ -5,7 +5,7 @@
 
 var path = require('path')
 var proc = require('child_process')
-var ssbRef = require('ssb-ref')
+var u = require('./lib/util')
 
 var prog = 'git ssb'
 
@@ -119,33 +119,16 @@ function err(code) {
   process.exit(code)
 }
 
-function getSbot(config, cb) {
-  var keys = require('ssb-keys')
-    .loadOrCreateSync(path.join(config.path, 'secret'))
-  require('ssb-client')(keys, config, cb)
-}
-
 function hasRemote(name) {
   var child = proc.spawnSync('git', ['remote'], {encoding: 'utf8'})
   var remotes = child.stdout.split(/\n/)
   return !!~remotes.indexOf(name)
 }
 
-function getRemoteUrl(name) {
-  return proc.spawnSync('git', ['remote', 'get-url', name],
-    {encoding: 'utf8'}).stdout.trim()
-}
-
-function repoId(id) {
-  if (!id) return
-  id = String(id).replace(/^ssb:\/*/, '')
-  return ssbRef.isMsg(id) ? id : null
-}
-
 function createRepo(config, remoteName, upstream) {
   if (hasRemote(remoteName))
     err(1, 'Remote \'' + remoteName + '\' already exists')
-  getSbot(config, function (err, sbot) {
+  u.getSbot(config, function (err, sbot) {
     if (err) throw err
     var ssbGit = require('ssb-git-repo')
     ssbGit.createRepo(sbot, {upstream: upstream}, function (err, repo) {

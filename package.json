@@ -10,11 +10,16 @@
   "dependencies": {
     "git-remote-ssb": "^1.1.6",
     "git-ssb-web": "^1.12.4",
+    "multicb": "^1.2.1",
+    "pull-cat": "^1.1.8",
+    "pull-paramap": "^1.1.6",
+    "pull-stream": "^3.4.2",
     "ssb-client": "^3.0.1",
     "ssb-config": "^2.0.0",
     "ssb-git-repo": "^1.6.3",
-    "ssb-ref": "^2.3.0",
     "ssb-keys": "^5.0.0",
+    "ssb-names": "^2.0.0",
+    "ssb-ref": "^2.3.0",
     "stream-to-pull-stream": "^1.6.8"
   },
   "repository": {

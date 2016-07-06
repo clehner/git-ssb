@@ -33,6 +33,8 @@ function main() {
       return createRepo(config, config._[0] || 'ssb')
     case 'fork':
       return forkRepo(config)
+    case 'forks':
+      return require('./lib/forks')(config)
     case 'web':
       return require('git-ssb-web/server')
     case 'help':
@@ -53,6 +55,7 @@ function usage(code) {
     'Commands:',
     '  create    Create a git repo on SSB',
     '  fork      Fork a git repo on SSB',
+    '  forks     List forks of a repo',
     '  web       Serve a web server for repos',
     '  help      Get help about a command')
   process.exit(code)
@@ -92,6 +95,15 @@ function help(cmd) {
         '  upstream      id, url, or git remote name of the repo to fork.',
         '                default: \'origin\' or \'ssb\'',
         '  remote_name   Name for the new remote')
+    case 'forks':
+      return out(
+        'Usage: ' + prog + ' forks [<repo>]',
+        '',
+        '  List repos that are forks of the given repo',
+        '',
+        'Arguments:',
+        '  repo      id, url, or git remote name of the base repo.',
+        '                default: \'origin\' or \'ssb\'')
     case 'web':
       return out(
         'Usage: ' + prog + ' web [<host:port>] [<options>]',

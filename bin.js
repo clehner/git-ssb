@@ -35,6 +35,8 @@ function main() {
       return forkRepo(config)
     case 'forks':
       return require('./lib/forks')(config)
+    case 'name':
+      return require('./lib/name')(config)
     case 'web':
       return require('git-ssb-web/server')
     case 'help':
@@ -56,6 +58,7 @@ function usage(code) {
     '  create    Create a git repo on SSB',
     '  fork      Fork a git repo on SSB',
     '  forks     List forks of a repo',
+    '  name      Name a repo',
     '  web       Serve a web server for repos',
     '  help      Get help about a command')
   process.exit(code)
@@ -104,6 +107,16 @@ function help(cmd) {
         'Arguments:',
         '  repo      id, url, or git remote name of the base repo.',
         '                default: \'origin\' or \'ssb\'')
+    case 'name':
+      return out(
+        'Usage: ' + prog + ' name [<repo>] <name>',
+        '',
+        '  Publish a name for a git-ssb repo',
+        '',
+        'Arguments:',
+        '  repo      id, url, or git remote name of the base repo.',
+        '                default: \'origin\' or \'ssb\'',
+        '  name      the name to give the repo')
     case 'web':
       return out(
         'Usage: ' + prog + ' web [<host:port>] [<options>]',
@@ -159,12 +172,13 @@ function forkRepo(argv) {
   switch (argv._.length) {
     case 1:
       name = argv._[0]
-      upstream = repoId(getRemoteUrl('origin')) || repoId(getRemoteUrl('ssb'))
+      upstream = u.repoId(u.getRemoteUrl('origin'))
+              || u.repoId(u.getRemoteUrl('ssb'))
       if (!upstream)
         err(1, 'unable to find git-ssb upstream to fork')
       break
     case 2:
-      upstream = repoId(argv._[0]) || repoId(getRemoteUrl(argv._[0]))
+      upstream = u.repoId(argv._[0]) || u.repoId(u.getRemoteUrl(argv._[0]))
       name = argv._[1]
       if (!upstream)
         err(1, 'unable to find git-ssb upstream \'' + argv._[0] + '\'')

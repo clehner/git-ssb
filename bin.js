@@ -36,7 +36,7 @@ function main() {
     case 'forks':
       return require('./lib/forks')(config)
     case 'name':
-      return require('./lib/name')(config)
+      return nameRepo(config)
     case 'web':
       return require('git-ssb-web/server')
     case 'help':
@@ -168,26 +168,33 @@ function createRepo(config, remoteName, upstream) {
 }
 
 function forkRepo(argv) {
-  var upstream, name
-  switch (argv._.length) {
-    case 1:
-      name = argv._[0]
-      upstream = u.repoId(u.getRemoteUrl('origin'))
-              || u.repoId(u.getRemoteUrl('ssb'))
-      if (!upstream)
-        err(1, 'unable to find git-ssb upstream to fork')
-      break
-    case 2:
-      upstream = u.repoId(argv._[0]) || u.repoId(u.getRemoteUrl(argv._[0]))
-      name = argv._[1]
-      if (!upstream)
-        err(1, 'unable to find git-ssb upstream \'' + argv._[0] + '\'')
-      break
-    default:
-      return help('fork')
-  }
-
+  var repo
+  if (argv._.length == 1) repo = u.getDefaultRemote()
+  else if (argv._.length == 2) repo = u.getRemote(argv._.shift())
+  else return help('fork')
+  if (!repo) err(1, 'unable to find git-ssb upstream repo')
+  var name = argv._[0]
   if (!name) err(1, 'missing remote name')
 
-  createRepo(argv, name, upstream)
+  createRepo(argv, name, repo)
+}
+
+function nameRepo(argv) {
+  var repo
+  if (argv._.length == 1) repo = u.getDefaultRemote()
+  else if (argv._.length == 2) repo = u.getRemote(argv._.shift())
+  else return help('name')
+  if (!repo) err(1, 'unable to find git-ssb repo')
+  var name = argv._[0]
+  if (!name) err(1, 'missing name')
+
+  u.getSbot(argv, function (err, sbot) {
+    if (err) throw err
+    var schemas = require('ssb-msg-schemas')
+    sbot.publish(schemas.name(repo, name), function (err, msg) {
+      if (err) throw err
+      console.log(msg.key)
+      sbot.close()
+    })
+  })
 }

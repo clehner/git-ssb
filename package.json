@@ -20,6 +20,7 @@
     "ssb-keys": "^5.0.0",
     "ssb-msg-schemas": "^6.2.1",
     "ssb-names": "^2.0.0",
+    "ssb-pull-requests": "^0.1.2",
     "ssb-ref": "^2.3.0",
     "stream-to-pull-stream": "^1.7.0"
   },

@@ -23,7 +23,7 @@ function main() {
   var config = require('ssb-config/inject')(appName)
 
   var cmd = config._.shift()
-  if (config.help || config.h)
+  if (config.help)
     return help(cmd)
   if (config.version)
     return version()
@@ -37,6 +37,8 @@ function main() {
       return require('./lib/forks')(config)
     case 'name':
       return nameRepo(config)
+    case 'pull-request':
+      return require('./lib/pull-request')(config)
     case 'web':
       return require('git-ssb-web/server')
     case 'help':
@@ -55,12 +57,13 @@ function usage(code) {
     'Usage: git ssb [--version] [--help] [command]',
     '',
     'Commands:',
-    '  create    Create a git repo on SSB',
-    '  fork      Fork a git repo on SSB',
-    '  forks     List forks of a repo',
-    '  name      Name a repo',
-    '  web       Serve a web server for repos',
-    '  help      Get help about a command')
+    '  create        Create a git repo on SSB',
+    '  fork          Fork a git repo on SSB',
+    '  forks         List forks of a repo',
+    '  name          Name a repo',
+    '  pull-request  Create a pull-request',
+    '  web           Serve a web server for repos',
+    '  help          Get help about a command')
   process.exit(code)
 }
 
@@ -117,6 +120,23 @@ function help(cmd) {
         '  repo      id, url, or git remote name of the base repo.',
         '                default: \'origin\' or \'ssb\'',
         '  name      the name to give the repo')
+    case 'pull-request':
+      return out(
+        'Usage: ' + prog + ' pull-request [-b <base>] [-h <head>],',
+        '                                 [-m <message> | -F <file>]',
+        '',
+        '  Create a pull request. This requests that changes from <head>',
+        '  be merged into <base>.',
+        '',
+        'Arguments:',
+        '  head      the head repo/branch, in format "[<repo>:]<branch>"',
+        '            Defaults to \'origin\' or \'ssb\', and the current branch.',
+        '  base      the base repo/branch, in format "[<repo>:]<branch>"',
+        '            where <repo> may be a repo id or git remote name.',
+        '            Defaults to the upstream of <head> and its default branch',
+        '            (usually \'master\')',
+        '  message   the text for the pull-request message',
+        '  file      name of file from which to read pull-request text')
     case 'web':
       return out(
         'Usage: ' + prog + ' web [<host:port>] [<options>]',
@@ -177,24 +197,4 @@ function forkRepo(argv) {
   if (!name) err(1, 'missing remote name')
 
   createRepo(argv, name, repo)
-}
-
-function nameRepo(argv) {
-  var repo
-  if (argv._.length == 1) repo = u.getDefaultRemote()
-  else if (argv._.length == 2) repo = u.getRemote(argv._.shift())
-  else return help('name')
-  if (!repo) err(1, 'unable to find git-ssb repo')
-  var name = argv._[0]
-  if (!name) err(1, 'missing name')
-
-  u.getSbot(argv, function (err, sbot) {
-    if (err) throw err
-    var schemas = require('ssb-msg-schemas')
-    sbot.publish(schemas.name(repo, name), function (err, msg) {
-      if (err) throw err
-      console.log(msg.key)
-      sbot.close()
-    })
-  })
 }

@@ -133,8 +133,8 @@ function help(cmd) {
         '            Defaults to \'origin\' or \'ssb\', and the current branch.',
         '  base      the base repo/branch, in format "[<repo>:]<branch>"',
         '            where <repo> may be a repo id or git remote name.',
-        '            Defaults to the upstream of <head> and its default branch',
-        '            (usually \'master\')',
+        '            Defaults to the upstream of <head>, or <head>,',
+        '            and its default branch (usually \'master\')',
         '  message   the text for the pull-request message',
         '  file      name of file from which to read pull-request text')
     case 'web':

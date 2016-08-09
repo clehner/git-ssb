@@ -12,6 +12,7 @@
     "git-ssb-web": "^1.16.0",
     "multicb": "^1.2.1",
     "pull-cat": "^1.1.8",
+    "pull-git-repo": "^0.5.0",
     "pull-paramap": "^1.1.6",
     "pull-stream": "^3.4.2",
     "ssb-client": "^3.0.1",

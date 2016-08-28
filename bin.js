@@ -198,3 +198,23 @@ function forkRepo(argv) {
 
   createRepo(argv, name, repo)
 }
+
+function nameRepo(argv) {
+  var repo
+  if (argv._.length == 1) repo = u.getDefaultRemote()
+  else if (argv._.length == 2) repo = u.getRemote(argv._.shift())
+  else return help('name')
+  if (!repo) err(1, 'unable to find git-ssb repo')
+  var name = argv._[0]
+  if (!name) err(1, 'missing name')
+
+  u.getSbot(argv, function (err, sbot) {
+    if (err) throw err
+    var schemas = require('ssb-msg-schemas')
+    sbot.publish(schemas.name(repo, name), function (err, msg) {
+      if (err) throw err
+      console.log(msg.key)
+      sbot.close()
+    })
+  })
+}

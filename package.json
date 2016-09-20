@@ -17,7 +17,7 @@
     "pull-stream": "^3.4.2",
     "ssb-client": "^3.0.1",
     "ssb-config": "^2.0.0",
-    "ssb-git-repo": "^1.9.0",
+    "ssb-git-repo": "^1.10.0",
     "ssb-keys": "^5.0.0",
     "ssb-mentions": "^0.1.0",
     "ssb-msg-schemas": "^6.2.1",

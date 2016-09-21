@@ -183,7 +183,8 @@ function createRepo(config, remoteName, name, upstream) {
     }, function (err, repo) {
       if (err) throw err
       var url = 'ssb://' + repo.id
-      console.log(url)
+      console.log('Created repo:', url, name ? '(' + name + ')' : '')
+      console.log('Added remote:', remoteName)
       repo.close()
       sbot.close()
       proc.spawn('git', ['remote', 'add', remoteName, url], {stdio: 'inherit'})

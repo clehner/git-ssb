@@ -26,8 +26,8 @@ created by other users.
 Publish an existing repo to SSB:
 
     cd repo
-    git ssb create ssb my-repo
-    git push ssb
+    git ssb create ssb my-cool-repo
+    git push --tags ssb master
 
 Clone a repo from SSB:
 

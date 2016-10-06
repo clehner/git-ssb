@@ -1,6 +1,6 @@
 {
   "name": "git-ssb",
-  "version": "2.0.0-collab",
+  "version": "2.0.0",
   "description": "git hosting on secure-scuttlebutt (ssb)",
   "bin": {
     "git-ssb": "bin.js",

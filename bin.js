@@ -30,7 +30,7 @@ function main() {
 
   switch (cmd) {
     case 'create':
-      return createRepo(config, config._[0] || 'ssb', config._[1])
+      return createRepo(config, config._[0], config._[1])
     case 'fork':
       return forkRepo(config)
     case 'forks':
@@ -84,13 +84,13 @@ function help(cmd) {
         '  command   Command to get help with')
     case 'create':
       return out(
-        'Usage: ' + prog + ' create [<remote> [<name>]]',
+        'Usage: ' + prog + ' create <remote> [<name>]',
         '',
         '  Create a new git-ssb repo and add it as a git remote',
         '',
         'Arguments:',
-        '  remote    Name of the remote to add. default: \'ssb\'',
-        '  name      Name to give the repo on ssb, if any')
+        '  remote    Name of the remote to add. e.g. \'origin\' or \'ssb\'',
+        '  name      Name to give the repo, if any')
     case 'fork':
       return out(
         'Usage: ' + prog + ' fork [<upstream>] <remote_name>',
@@ -172,6 +172,8 @@ function hasRemote(name) {
 }
 
 function createRepo(config, remoteName, name, upstream) {
+  if (config._.length == 0) return help('create')
+  if (!remoteName) err(1, 'Missing remote name')
   if (hasRemote(remoteName))
     err(1, 'Remote \'' + remoteName + '\' already exists')
   u.getSbot(config, function (err, sbot) {

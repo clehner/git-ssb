@@ -186,10 +186,10 @@ function createRepo(config, remoteName, name, upstream) {
       if (err) throw err
       var url = 'ssb://' + repo.id
       console.log('Created repo:', url, name ? '(' + name + ')' : '')
+      proc.spawnSync('git', ['remote', 'add', remoteName, url])
       console.log('Added remote:', remoteName)
       repo.close()
       sbot.close()
-      proc.spawn('git', ['remote', 'add', remoteName, url], {stdio: 'inherit'})
     })
   })
 }

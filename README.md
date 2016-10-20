@@ -59,9 +59,8 @@ follows:
 [git config]: http://git-scm.com/docs/git-config
 [patchwork]: https://github.com/ssbc/patchwork
 [patchwork-testing]: https://github.com/ssbc/patchwork/blob/3f6d2d60b66361c3c926ff0a9e81847e71c8cfdd/docs/TESTING.md
-[`git-ssb-web`]: %q5d5Du+9WkaSdjc8aJPZm+jMrqgo0tmfR+RcX5ZZ6H4=.sha256
-[`git-remote-ssb`]: %ZVTOK3GA2aewEDI2rPxJqKXEIv4OIUN2swMPE2FeJm8=.sha256
-
+[`git-ssb-web`]: http://git-ssb.celehner.com/%25q5d5Du%2B9WkaSdjc8aJPZm%2BjMrqgo0tmfR%2BRcX5ZZ6H4%3D.sha256
+[`git-remote-ssb`]: http://git-ssb.celehner.com/%25ZVTOK3GA2aewEDI2rPxJqKXEIv4OIUN2swMPE2FeJm8%3D.sha256
 ## License
 
 Copyright (c) 2016 Charles Lehner

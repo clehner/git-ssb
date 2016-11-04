@@ -20,6 +20,7 @@
     "ssb-config": "^2.1.0",
     "ssb-git-repo": "^2.3.0",
     "ssb-keys": "^6.1.2",
+    "ssb-issues": "^0.2.3",
     "ssb-mentions": "^0.1.0",
     "ssb-msg-schemas": "^6.2.1",
     "ssb-pull-requests": "^0.1.2",

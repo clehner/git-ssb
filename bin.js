@@ -37,6 +37,9 @@ function main() {
       return require('./lib/forks')(config)
     case 'issues':
       return require('./lib/issues')(config)
+    case 'prs':
+    case 'pull-requests':
+      return require('./lib/pull-requests')(config)
     case 'name':
       return nameRepo(config)
     case 'pull-request':
@@ -63,6 +66,7 @@ function usage(code) {
     '  fork          Fork a git repo on SSB',
     '  forks         List forks of a repo',
     '  issues        List issues for a repo',
+    '  prs           List pull requests for a repo',
     '  name          Name a repo',
     '  pull-request  Create a pull-request',
     '  web           Serve a web server for repos',
@@ -121,12 +125,26 @@ function help(cmd) {
         '  List issues about a repo',
         '',
         'Arguments:',
-        '  repo      id, url, or git remote name of the base repo.',
+        '  repo      id, url, or git remote name of the repo.',
         '                default: \'origin\' or \'ssb\'',
         'Options:',
         '  --open    Show only open issues (default)',
         '  --closed  Show only closed issues',
         '  --all     Show issues of all state')
+    case 'pull-requests':
+    case 'prs':
+      return out(
+        'Usage: ' + prog + ' prs [--all|--open|--closed] [<repo>]',
+        '',
+        '  List pull requests for a repo',
+        '',
+        'Arguments:',
+        '  repo      id, url, or git remote name of the base repo.',
+        '                default: \'origin\' or \'ssb\'',
+        'Options:',
+        '  --open    Show only open pull requests (default)',
+        '  --closed  Show only closed pull-requests',
+        '  --all     Show pull requests of all state')
     case 'name':
       return out(
         'Usage: ' + prog + ' name [<repo>] <name>',

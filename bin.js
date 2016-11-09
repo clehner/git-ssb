@@ -212,6 +212,10 @@ function createRepo(config, remoteName, name, upstream) {
     err(1, 'Remote \'' + remoteName + '\' already exists')
   u.getSbot(config, function (err, sbot) {
     if (err) throw err
+
+    // If no name is given, use the current directory's name.
+    if (!name) name = path.basename(process.cwd())
+
     var ssbGit = require('ssb-git-repo')
     ssbGit.createRepo(sbot, {
       upstream: upstream,

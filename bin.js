@@ -1,24 +1,17 @@
 #!/bin/sh
 ':' //; exec "$(command -v node || command -v nodejs)" "$0" "$@"
 // http://unix.stackexchange.com/questions/65235/universal-node-js-shebang
-// vi: ft=javascript
-
-var path = require('path')
-var proc = require('child_process')
 
 main()
 
 function main() {
+  var path = require('path')
   switch (path.basename(process.argv[1])) {
     case 'git-remote-ssb':
       return require('git-remote-ssb/git-remote-ssb')
   }
 
-  var appName = 'ssb_appname' in process.env ? process.env.ssb_appname :
-    proc.spawnSync('git', ['config', 'ssb.appname'],
-      {encoding: 'utf8'}).stdout.trim()
-  var config = require('ssb-config/inject')(appName)
-
+  var config = require('ssb-config/inject')(getAppName())
   var cmd = config._.shift()
   if (config.help)
     return require('./lib/help')(cmd)
@@ -57,4 +50,10 @@ function main() {
 function version() {
   var pkg = require('./package')
   console.log(pkg.name, pkg.version)
+}
+
+function getAppName() {
+  var proc = require('child_process')
+  return 'ssb_appname' in process.env ? process.env.ssb_appname :
+    proc.spawnSync('git', ['config', 'ssb.appname']).stdout.toString().trim()
 }

@@ -25,7 +25,7 @@ function main() {
 
   switch (cmd) {
     case 'create':
-      return require('./lib/create')(config, config._[0], config._[1])
+      return require('./lib/create')(config)
     case 'fork':
       return require('./lib/fork')(config)
     case 'forks':

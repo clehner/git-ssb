@@ -2,7 +2,12 @@
 ':' //; exec "$(command -v node || command -v nodejs)" "$0" "$@"
 // http://unix.stackexchange.com/questions/65235/universal-node-js-shebang
 
-main()
+try {
+  main()
+} catch(e) {
+  console.error(e instanceof Error ? e.stack : e)
+  process.exit(1)
+}
 
 function main() {
   var path = require('path')

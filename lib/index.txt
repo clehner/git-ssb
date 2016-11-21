@@ -7,6 +7,7 @@ Commands:
   issues        List issues for a repo
   prs           List pull requests for a repo
   authors       List contributors to a repo
+  log           List history of updates to a repo
   name          Name a repo
   pull-request  Create a pull-request
   web           Serve a web server for repos

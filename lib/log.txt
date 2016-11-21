@@ -1,0 +1,11 @@
+Usage: git -p ssb log [--global | <repo>]
+
+  List history of updates to a repo
+
+Options:
+  -g --global   Show updates to all repos
+
+Arguments:
+  repo      id, url, or git remote name of the base repo.
+                default: 'origin' or 'ssb'
+

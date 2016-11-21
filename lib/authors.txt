@@ -1,0 +1,17 @@
+Usage: git ssb [--no-forks] authors [<repo>]
+
+  List feeds who pushed to a repo, including those which pushed to
+  a fork if their commit was later merged into the upstream.
+
+  Output is space separated lines containing information about the
+  last update by each feed:
+
+    <last update id> <feed id> <feed name>
+
+Options:
+  -n --no-forks    Only look at updates pushed directly to the repo,
+                   not updates pushed to forks and then merged
+
+Arguments:
+  repo      id, url, or git remote name of the base repo.
+                default: 'origin' or 'ssb'

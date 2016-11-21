@@ -1,4 +1,4 @@
-Usage: git ssb [--version] [--help] [command]
+Usage: git ssb [--version] [command] [--help]
 
 Commands:
   create        Create a git repo on SSB

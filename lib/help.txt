@@ -1,0 +1,7 @@
+Usage: git ssb help <command>
+
+  Get help about a git-ssb command
+
+Options:
+  command   Command to get help with
+

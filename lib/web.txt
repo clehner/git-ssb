@@ -1,0 +1,9 @@
+Usage: git ssb web [<host:port>] [<options>]
+
+  Host a git ssb web server
+
+Options:
+  host        Host to bind to. default: localhost
+  port        Port to bind to. default: 7718
+  --public    Make the instance read-only
+

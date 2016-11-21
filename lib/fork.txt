@@ -1,0 +1,10 @@
+Usage: git ssb fork [<upstream>] <remote_name>
+
+  Create a new git-ssb repo as a fork of another repo
+  and add it as a git remote
+
+Arguments:
+  upstream      id, url, or git remote name of the repo to fork.
+                default: 'origin' or 'ssb'
+  remote_name   Name for the new remote
+

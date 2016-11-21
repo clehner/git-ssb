@@ -1,0 +1,13 @@
+Usage: git ssb [--version] [--help] [command]
+
+Commands:
+  create        Create a git repo on SSB
+  fork          Fork a git repo on SSB
+  forks         List forks of a repo
+  issues        List issues for a repo
+  prs           List pull requests for a repo
+  name          Name a repo
+  pull-request  Create a pull-request
+  web           Serve a web server for repos
+  help          Get help about a command
+

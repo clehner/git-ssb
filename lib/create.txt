@@ -1,0 +1,8 @@
+Usage: git ssb create <remote> [<name>]
+
+  Create a new git-ssb repo and add it as a git remote
+
+Arguments:
+  remote    Name of the remote to add. e.g. 'origin' or 'ssb'
+  name      Name to give the repo, if any
+

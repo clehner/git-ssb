@@ -1,0 +1,12 @@
+Usage: git ssb prs [--all|--open|--closed] [<repo>]
+
+  List pull requests for a repo
+
+Arguments:
+  repo      id, url, or git remote name of the base repo.
+                default: 'origin' or 'ssb'
+Options:
+  --open    Show only open pull requests (default)
+  --closed  Show only closed pull-requests
+  --all     Show pull requests of all state
+

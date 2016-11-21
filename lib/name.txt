@@ -1,0 +1,9 @@
+Usage: git ssb name [<repo>] <name>
+
+  Publish a name for a git-ssb repo
+
+Arguments:
+  repo      id, url, or git remote name of the base repo.
+                default: 'origin' or 'ssb'
+  name      the name to give the repo
+

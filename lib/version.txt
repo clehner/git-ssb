@@ -1,0 +1,4 @@
+Usage: git ssb version
+
+  Get the version of git-ssb
+

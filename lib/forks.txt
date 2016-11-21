@@ -1,0 +1,8 @@
+Usage: git ssb forks [<repo>]
+
+  List repos that are forks of the given repo
+
+Arguments:
+  repo      id, url, or git remote name of the base repo.
+                default: 'origin' or 'ssb'
+
